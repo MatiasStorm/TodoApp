@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>index</title>
@@ -9,12 +9,29 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </head>
 <body>
-    <form>
-        <div class="form-group">
-            <label for="todoText">Todo</label>
-            <input type="text" class="form-control" id="todoText" placeholder="todo text...">
-        </div>
-    </form>
+    <div class="container mt-3">
+        <ul class="list-group mb-3">
+            <li class="list-group-item" th:each="t : ${ todos }">
+                <b class="align-text-top" th:text="${t.text}"></b>
+                <button class="btn btn-primary float-right m-0 ml-3">&#10003;</button>
+                <button class="btn btn-secondary float-right m-0">Edit</button>
+            </li>
+        </ul>
+        <form action="#" th:action="@{/createTodo}" th:object="${todo}" method="post">
+            <div class="row">
+                <div class="form-group col-11 row">
+                    <label for="todoText" class="col-1 col-form-label">Todo</label>
+                    <div class="col-11">
+                        <input type="text" th:field="*{text}" class="form-control" id="todoText" placeholder="todo text...">
+                    </div>
+                </div>
+                <div class="col-1">
+                    <button type="submit" class="btn btn-success">+</button>
+                </div>
+
+            </div>
+        </form>
+    </div>
 
 </body>
 </html>

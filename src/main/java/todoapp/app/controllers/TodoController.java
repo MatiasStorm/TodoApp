@@ -3,6 +3,8 @@ package todoapp.app.controllers;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import todoapp.app.models.Todo;
 import todoapp.app.services.TodoService;
 
 @Controller
@@ -14,10 +16,14 @@ public class TodoController {
     }
 
     @GetMapping("/")
-    public String index(Model model){
+    public String index(Model model, Todo todo){
         model.addAttribute("todos", todoService.getTodos());
-        todoService.getTodos();
         return "index";
     }
 
+    @PostMapping("/createTodo")
+    public String createTodo(Todo todo){
+        todoService.addTodo(todo);
+        return "redirect:/";
+    }
 }
