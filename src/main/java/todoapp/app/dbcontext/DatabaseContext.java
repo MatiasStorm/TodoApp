@@ -14,7 +14,12 @@ import java.util.HashMap;
 
 @Component
 public class DatabaseContext {
-    JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate;
+    private final String createTableStatement = "CREATE TABLE IF NOT EXISTS `%s`";
+    private final String updateStatement = "UPDATE `%s` SET";
+    private final String insertStatement = "INSERT INTO `%s`";
+    private final String selectStatement = "SELECT * FROM `%s`";
+
 
     @Autowired
     public DatabaseContext(JdbcTemplate jdbcTemplate){
@@ -22,7 +27,7 @@ public class DatabaseContext {
     }
 
     public <T> boolean createTableIfNotExists(Class<T> cls){
-        String sqlStatement = "CREATE TABLE IF NOT EXISTS `" + cls.getSimpleName() + "` (";
+        String sqlStatement = String.format(createTableStatement, cls.getSimpleName()) + " (";
         for(Field field : cls.getDeclaredFields()){
             if(field.isAnnotationPresent(DatabaseField.class)){
                 DatabaseField annotation = field.getAnnotation(DatabaseField.class);
@@ -35,7 +40,7 @@ public class DatabaseContext {
 
     public <T> void update(T object) throws IllegalAccessException {
         Class<?> cls = object.getClass();
-        String updateStatement = "UPDATE " + cls.getSimpleName() + " SET";
+        String sqlStatment = String.format(updateStatement, cls.getSimpleName());
         Object primaryKeyValue = "";
         String setClause = "";
         String whereClause = "WHERE ";
@@ -55,22 +60,26 @@ public class DatabaseContext {
             }
         }
         setClause = setClause.substring(0, setClause.length() - 1);
-        updateStatement += setClause + " " + whereClause;
+        sqlStatment += setClause + " " + whereClause;
         values.add(primaryKeyValue);
-        jdbcTemplate.update(updateStatement, values.toArray());
+        jdbcTemplate.update(sqlStatment, values.toArray());
     }
 
     public <T> T insert(T object) throws IllegalAccessException {
         Class<?> cls = object.getClass();
-        String insertStatement = String.format("INSERT INTO `%s`", cls.getSimpleName());
-        String valueStatement = " VALUES(";
+        String sqlStatement = String.format(insertStatement, cls.getSimpleName());
         ArrayList<Object> values = new ArrayList<>();
+        String valueStatement = " VALUES(";
         String columnStatement = " (";
+        String primaryKeyName = "";
         for(Field field : cls.getDeclaredFields()){
             if(field.isAnnotationPresent(DatabaseField.class)){
                 DatabaseField annotation = field.getAnnotation(DatabaseField.class);
                 field.setAccessible(true);
-                if(annotation.create() && field.get(object) != null){
+                if(annotation.primaryKey()){
+                    primaryKeyName = field.getName();
+                }
+                else if(annotation.create() && field.get(object) != null){
                     values.add(field.get(object));
                     valueStatement += " ?,";
                     columnStatement += " " + field.getName() + ",";
@@ -79,15 +88,15 @@ public class DatabaseContext {
         }
         valueStatement = valueStatement.substring(0, valueStatement.length() - 1) + ")";
         columnStatement = columnStatement.substring(0, columnStatement.length() - 1) + ")";
-        insertStatement += columnStatement + valueStatement;
-        jdbcTemplate.update(insertStatement, values.toArray());
-        int id = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
-        T t = (T) select(cls, "WHERE id = " + id);
+        sqlStatement += columnStatement + valueStatement;
+        jdbcTemplate.update(sqlStatement, values.toArray());
+        Integer primaryKeyValue = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
+        T t = (T) select(cls, String.format("WHERE %s = %s", primaryKeyName, primaryKeyValue));
         return t;
     }
 
     private <T> T select(Class<T> cls, String whereClause){
-        String sqlStatement = "SELECT * FROM " + cls.getSimpleName() + " " + whereClause;
+        String sqlStatement = String.format(selectStatement, cls.getSimpleName()) + " " + whereClause;
         T t = jdbcTemplate.queryForObject(sqlStatement, (rs, rowNum) -> mapRowToObject(rs, cls));
         return t;
     }
@@ -142,8 +151,9 @@ public class DatabaseContext {
     }
     public <T> ArrayList<T> selectAll(Class<T> cls){
         ArrayList<T> objects;
+        String sqlStatement = String.format(selectStatement, cls.getSimpleName());
         try {
-            objects = jdbcTemplate.queryForObject("SELECT * FROM " + cls.getSimpleName(), (rs, rowNum) -> {
+            objects = jdbcTemplate.queryForObject( sqlStatement, (rs, rowNum) -> {
                 ArrayList<T> o = new ArrayList<>();
                 while(rs.next()){
                     o.add(mapRowToObject(rs, cls));
