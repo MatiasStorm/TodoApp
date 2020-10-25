@@ -3,7 +3,7 @@ package todoapp.app.models;
 import todoapp.app.dbcontext.DatabaseField;
 
 public class Todo {
-    @DatabaseField(dataType = "INT PRIMARY KEY AUTO_INCREMENT")
+    @DatabaseField(dataType = "INT PRIMARY KEY AUTO_INCREMENT", create=false, edit = false)
     private int id;
 
     @DatabaseField(dataType = "VARCHAR(100)")

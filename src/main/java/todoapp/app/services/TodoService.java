@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 @Component
 public class TodoService {
-    ArrayList<Todo> todos;
+    ArrayList<Todo> todos = new ArrayList<>();
     private final String tableName = String.format("`%s`", Todo.class.getSimpleName());
     private String insertStatement = String.format("INSERT INTO %s (text) VALUES(?)", tableName);
     private String selectStatement = String.format("SELECT * FROM %s", tableName);
@@ -28,75 +28,18 @@ public class TodoService {
     public TodoService(JdbcTemplate jdbcTemplate, DatabaseContext dbContext){
         this.jdbcTemplate = jdbcTemplate;
         this.dbContext = dbContext;
-//        createTable();
         dbContext.createTableIfNotExists(Todo.class);
-        loadTodos();
-    }
-
-    private void loadTodos(){
-        try {
-            todos = jdbcTemplate.queryForObject(selectStatement, (rs, rowNum) -> {
-                ArrayList<Todo> loadedTodos = new ArrayList<>();
-                while(rs.next()){
-                    loadedTodos.add(readRow(rs));
-                }
-                return loadedTodos;
-            });
-        }
-        catch (EmptyResultDataAccessException e) {
-            this.todos = new ArrayList<>();
-        }
-    }
-
-    private Todo readRow(ResultSet rs) throws SQLException {
-        Todo t = new Todo();
-        for(Field field : Todo.class.getDeclaredFields() ){
-            if(field.isAnnotationPresent(DatabaseField.class)){
-                String fieldName = field.getName();
-                field.setAccessible(true);
-
-                try {
-                    String fieldClass = field.getType().getSimpleName();
-                    if(fieldClass.equals("String")){
-                        field.set(t, rs.getString(fieldName));
-                    }
-                    else if(fieldClass.equals( "int" )){
-                        field.set(t, rs.getInt(fieldName));
-                    }
-                    else if(fieldClass.equals( "float" )){
-                        field.set(t, rs.getFloat(fieldName));
-                    }
-                    else if(fieldClass.equals( "double" )){
-                        field.set(t, rs.getDouble(fieldName));
-                    }
-                    else if(fieldClass.equals( "boolean" )){
-                        field.set(t, rs.getBoolean(fieldName));
-                    }
-                }
-                catch (IllegalAccessException e){
-                    System.out.println(e.getMessage());
-                }
-
-            }
-        }
-        return t;
+        todos = dbContext.selectAll(Todo.class);
     }
 
     public ArrayList<Todo> getTodos(){
         return todos;
     }
 
-    public void addTodo(Todo todo){
-        jdbcTemplate.update(insertStatement, todo.getText());
-        int todoId = jdbcTemplate.queryForObject(selectLastIdStatement, Integer.class);
-        Todo dbTodo = selectTodoById(todoId);
-        todos.add(dbTodo);
-    }
-
-    private Todo selectTodoById(int id){
-        String sqlStatement = selectStatement + " WHERE id = " + id;
-        Todo todo = jdbcTemplate.queryForObject(sqlStatement, (rs, rowNum) -> (readRow(rs)));
-        return todo;
+    public void addTodo(Todo todo) throws IllegalAccessException {
+        Todo t = (Todo) dbContext.addRow(todo);
+        if(t == null) return;
+        todos.add(t);
     }
 
     public void updateTodo(Todo todo){

@@ -22,7 +22,7 @@ public class TodoController {
     }
 
     @PostMapping("/createTodo")
-    public String createTodo(Todo todo){
+    public String createTodo(Todo todo) throws IllegalAccessException {
         todoService.addTodo(todo);
         return "redirect:/";
     }

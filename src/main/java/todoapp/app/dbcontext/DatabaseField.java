@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface DatabaseField {
     public String dataType() default "";
+    public boolean edit() default true;
+    public boolean create() default true;
 }
