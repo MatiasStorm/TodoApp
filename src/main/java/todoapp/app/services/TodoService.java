@@ -1,6 +1,7 @@
 package todoapp.app.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import todoapp.app.annotations.DatabaseField;
@@ -18,6 +19,7 @@ public class TodoService {
     private String createTableStatement = String.format("CREATE TABLE IF NOT EXISTS %s (?, ?, ?)", tableName );
     private String insertStatement = String.format("INSERT INTO %s (text) VALUES(?)", tableName);
     private String selectStatement = String.format("SELECT * FROM %s", tableName);
+    private String updateStatement = String.format("UPDATE %s SET text = ?, done = ? where id = ?", tableName);
     private String selectLastIdStatement = "SELECT LAST_INSERT_ID()";
     private final JdbcTemplate jdbcTemplate;
 
@@ -29,13 +31,18 @@ public class TodoService {
     }
 
     private void loadTodos(){
-        todos = jdbcTemplate.queryForObject(selectStatement, (rs, rowNum) -> {
-            ArrayList<Todo> loadedTodos = new ArrayList<>();
-            while(rs.next()){
-                loadedTodos.add(readRow(rs));
-            }
-            return loadedTodos;
-        });
+        try {
+            todos = jdbcTemplate.queryForObject(selectStatement, (rs, rowNum) -> {
+                ArrayList<Todo> loadedTodos = new ArrayList<>();
+                while(rs.next()){
+                    loadedTodos.add(readRow(rs));
+                }
+                return loadedTodos;
+            });
+        }
+        catch (EmptyResultDataAccessException e) {
+            this.todos = new ArrayList<>();
+        }
     }
 
     private Todo readRow(ResultSet rs) throws SQLException {
@@ -99,5 +106,19 @@ public class TodoService {
         String sqlStatement = selectStatement + " WHERE id = " + id;
         Todo todo = jdbcTemplate.queryForObject(sqlStatement, (rs, rowNum) -> (readRow(rs)));
         return todo;
+    }
+
+    public void updateTodo(Todo todo){
+        jdbcTemplate.update(updateStatement,  todo.getText(), todo.isDone(), todo.getId());
+        for(int i = todos.size() - 1; i >= 0; i--){
+            if(todos.get(i).getId() == todo.getId()){
+                todos.remove(i);
+                break;
+            }
+        }
+        todos.add(todo);
+    }
+
+    public void deleteTodo(Todo todo){
     }
 }
