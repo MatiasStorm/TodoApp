@@ -1,6 +1,6 @@
 package todoapp.app.models;
 
-import todoapp.app.annotations.DatabaseField;
+import todoapp.app.dbcontext.DatabaseField;
 
 public class Todo {
     @DatabaseField(dataType = "INT PRIMARY KEY AUTO_INCREMENT")

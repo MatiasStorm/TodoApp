@@ -1,4 +1,4 @@
-package todoapp.app.annotations;
+package todoapp.app.dbcontext;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

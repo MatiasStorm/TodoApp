@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import todoapp.app.annotations.DatabaseField;
+import todoapp.app.dbcontext.DatabaseField;
+import todoapp.app.dbcontext.DatabaseContext;
 import todoapp.app.models.Todo;
 
 import java.lang.reflect.Field;
@@ -16,17 +17,19 @@ import java.util.ArrayList;
 public class TodoService {
     ArrayList<Todo> todos;
     private final String tableName = String.format("`%s`", Todo.class.getSimpleName());
-    private String createTableStatement = String.format("CREATE TABLE IF NOT EXISTS %s (?, ?, ?)", tableName );
     private String insertStatement = String.format("INSERT INTO %s (text) VALUES(?)", tableName);
     private String selectStatement = String.format("SELECT * FROM %s", tableName);
     private String updateStatement = String.format("UPDATE %s SET text = ?, done = ? where id = ?", tableName);
     private String selectLastIdStatement = "SELECT LAST_INSERT_ID()";
     private final JdbcTemplate jdbcTemplate;
+    private final DatabaseContext dbContext;
 
     @Autowired
-    public TodoService(JdbcTemplate jdbcTemplate){
+    public TodoService(JdbcTemplate jdbcTemplate, DatabaseContext dbContext){
         this.jdbcTemplate = jdbcTemplate;
-        createTable();
+        this.dbContext = dbContext;
+//        createTable();
+        dbContext.createTableIfNotExists(Todo.class);
         loadTodos();
     }
 
@@ -77,18 +80,6 @@ public class TodoService {
             }
         }
         return t;
-    }
-
-    private void createTable(){
-        String sqlStatement = "CREATE TABLE IF NOT EXISTS `" + Todo.class.getSimpleName() + "` (";
-        Class<Todo> todoClass = Todo.class;
-        for(Field field : todoClass.getDeclaredFields()){
-            if(field.isAnnotationPresent(DatabaseField.class)){
-                DatabaseField annotation = field.getAnnotation(DatabaseField.class);
-                sqlStatement += String.format(" `%s` %s,", field.getName(), annotation.dataType());
-            }
-        }
-        jdbcTemplate.execute(sqlStatement.substring(0, sqlStatement.length() - 1) + ")");
     }
 
     public ArrayList<Todo> getTodos(){
