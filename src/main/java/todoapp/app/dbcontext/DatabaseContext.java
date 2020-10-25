@@ -33,45 +33,61 @@ public class DatabaseContext {
         return true;
     }
 
-    public <T> T addRow(T obj) throws IllegalAccessException {
-        Class<?> cls = obj.getClass();
-        String insertStatement = String.format("INSERT INTO `%s`", cls.getSimpleName());
-        HashMap<String, Object> valuePairs = new HashMap<>();
+    public <T> void update(T object) throws IllegalAccessException {
+        Class<?> cls = object.getClass();
+        String updateStatement = "UPDATE " + cls.getSimpleName() + " SET";
+        Object primaryKeyValue = "";
+        String setClause = "";
+        String whereClause = "WHERE ";
+        ArrayList<Object> values = new ArrayList<>();
         for(Field field : cls.getDeclaredFields()){
             if(field.isAnnotationPresent(DatabaseField.class)){
                 DatabaseField annotation = field.getAnnotation(DatabaseField.class);
                 field.setAccessible(true);
-                if(annotation.create() && field.get(obj) != null){
-                    valuePairs.put(field.getName(), field.get(obj));
+                if (annotation.primaryKey()){
+                    whereClause += field.getName() + " = ?";
+                    primaryKeyValue = field.get(object);
+                }
+                else if(annotation.edit() && field.get(object) != null){
+                    values.add(field.get(object));
+                    setClause += " " + field.getName() + " = ?,";
                 }
             }
         }
-        Object[] keys = valuePairs.keySet().toArray();
-        Object[] values = new Object[keys.length];
-        String columnStatement = "";
-        String valueStatement = "";
-        Object key;
-        for(int i = 0; i < keys.length; i++){
-            key = keys[i];
-            values[i] = valuePairs.get(key);
-            if(i == 0){
-                columnStatement += key;
-                valueStatement += "?";
-            }
-            else {
-                columnStatement += ", " + key;
-                valueStatement += ", ?";
+        setClause = setClause.substring(0, setClause.length() - 1);
+        updateStatement += setClause + " " + whereClause;
+        values.add(primaryKeyValue);
+        jdbcTemplate.update(updateStatement, values.toArray());
+    }
+
+    public <T> T insert(T object) throws IllegalAccessException {
+        Class<?> cls = object.getClass();
+        String insertStatement = String.format("INSERT INTO `%s`", cls.getSimpleName());
+        String valueStatement = " VALUES(";
+        ArrayList<Object> values = new ArrayList<>();
+        String columnStatement = " (";
+        for(Field field : cls.getDeclaredFields()){
+            if(field.isAnnotationPresent(DatabaseField.class)){
+                DatabaseField annotation = field.getAnnotation(DatabaseField.class);
+                field.setAccessible(true);
+                if(annotation.create() && field.get(object) != null){
+                    values.add(field.get(object));
+                    valueStatement += " ?,";
+                    columnStatement += " " + field.getName() + ",";
+                }
             }
         }
-        insertStatement += " ( " + columnStatement + ") VALUES( " + valueStatement + " )";
-        jdbcTemplate.update(insertStatement, values);
+        valueStatement = valueStatement.substring(0, valueStatement.length() - 1) + ")";
+        columnStatement = columnStatement.substring(0, columnStatement.length() - 1) + ")";
+        insertStatement += columnStatement + valueStatement;
+        jdbcTemplate.update(insertStatement, values.toArray());
         int id = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
-        T t = (T) selectById(id, cls);
+        T t = (T) select(cls, "WHERE id = " + id);
         return t;
     }
 
-    private <T> T selectById(int id, Class<T> cls){
-        String sqlStatement = "SELECT * FROM " + cls.getSimpleName() + " WHERE id = " + id;
+    private <T> T select(Class<T> cls, String whereClause){
+        String sqlStatement = "SELECT * FROM " + cls.getSimpleName() + " " + whereClause;
         T t = jdbcTemplate.queryForObject(sqlStatement, (rs, rowNum) -> mapRowToObject(rs, cls));
         return t;
     }
@@ -140,4 +156,5 @@ public class DatabaseContext {
         }
         return objects;
     }
+
 }

@@ -28,7 +28,7 @@ public class TodoController {
     }
 
     @PostMapping("/updateTodo")
-    public String updateTodo(Todo todo){
+    public String updateTodo(Todo todo) throws IllegalAccessException {
         todoService.updateTodo(todo);
         return "redirect:/";
     }

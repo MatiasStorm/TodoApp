@@ -11,4 +11,5 @@ public @interface DatabaseField {
     public String dataType() default "";
     public boolean edit() default true;
     public boolean create() default true;
+    public boolean primaryKey() default false;
 }
