@@ -10,7 +10,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 @Component
 public class DatabaseContext {
@@ -127,20 +126,25 @@ public class DatabaseContext {
             field.setAccessible(true);
             try {
                 String fieldClass = field.getType().getSimpleName();
-                if(fieldClass.equals("String")){
-                    field.set(t, rs.getString(fieldName));
-                }
-                else if(fieldClass.equals( "int" )){
-                    field.set(t, rs.getInt(fieldName));
-                }
-                else if(fieldClass.equals( "float" )){
-                    field.set(t, rs.getFloat(fieldName));
-                }
-                else if(fieldClass.equals( "double" )){
-                    field.set(t, rs.getDouble(fieldName));
-                }
-                else if(fieldClass.equals( "boolean" )){
-                    field.set(t, rs.getBoolean(fieldName));
+                switch (fieldClass) {
+                    case "String":
+                        field.set(t, rs.getString(fieldName));
+                        break;
+                    case "int":
+                        field.set(t, rs.getInt(fieldName));
+                        break;
+                    case "float":
+                        field.set(t, rs.getFloat(fieldName));
+                        break;
+                    case "double":
+                        field.set(t, rs.getDouble(fieldName));
+                        break;
+                    case "boolean":
+                        field.set(t, rs.getBoolean(fieldName));
+                        break;
+                    case "Date":
+                        field.set(t, rs.getTimestamp(fieldName));
+                        break;
                 }
             }
             catch (IllegalAccessException e){
@@ -149,6 +153,7 @@ public class DatabaseContext {
 
         }
     }
+
     public <T> ArrayList<T> selectAll(Class<T> cls){
         ArrayList<T> objects;
         String sqlStatement = String.format(selectStatement, cls.getSimpleName());

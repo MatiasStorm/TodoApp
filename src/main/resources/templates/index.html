@@ -22,8 +22,11 @@
 <div class="container width-25 mt-3">
     <div class="row justify-content-center">
         <ul class="list-group mb-3 col-8">
-            <li class="list-group-item" th:each="t : ${ todos }" th:if="!${t.done}">
-                <h3 class="align-text-top d-inline" th:text="${t.text}"></h3>
+            <li class="list-group-item align-middle" th:each="t : ${ todos }" th:if="!${t.done}">
+                <h3 class="d-inline" >
+                    <b th:text="${t.text}"></b>
+                    <span class="badge badge-secondary" th:text="${#dates.format(t.created, 'HH:mm dd-MM-yyyy')}"></span>
+                </h3>
                 <form th:id="'updateTodo' + ${t.id}" hidden="true" th:action="@{updateTodo}" th:object="${todo}"
                       method="post">
                     <input type="number" th:name="id" th:value="${t.id}" hidden="true">
