@@ -1,7 +1,5 @@
 package todoapp.app.models;
 
-import todoapp.app.dbcontext.DatabaseField;
-
 import java.util.Date;
 
 public class Todo {
