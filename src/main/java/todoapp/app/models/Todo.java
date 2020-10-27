@@ -5,16 +5,9 @@ import todoapp.app.dbcontext.DatabaseField;
 import java.util.Date;
 
 public class Todo {
-    @DatabaseField(dataType = "INT PRIMARY KEY AUTO_INCREMENT", create=false, edit = false, primaryKey = true)
     private int id;
-
-    @DatabaseField(dataType = "VARCHAR(100)")
     private String text;
-
-    @DatabaseField(dataType = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private Date created;
-
-    @DatabaseField(dataType = "BOOLEAN DEFAULT false")
     private boolean done;
 
     public Todo(){}
