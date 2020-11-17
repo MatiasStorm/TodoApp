@@ -9,15 +9,16 @@ import todoapp.app.services.TodoService;
 
 @Controller
 public class TodoController {
-    TodoService todoService;
+    private final TodoService todoService;
 
-    public TodoController(TodoService todoService){
+    public TodoController(TodoService todoService) {
         this.todoService = todoService;
     }
 
     @GetMapping("/")
-    public String index(Model model, Todo todo){
+    public String index(Model model, Todo todo) {
         model.addAttribute("todos", todoService.getTodos());
+        model.addAttribute("todo", todo);
         return "index";
     }
 

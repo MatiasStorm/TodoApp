@@ -10,28 +10,27 @@ import java.util.ArrayList;
 @Component
 public class TodoService {
     ArrayList<Todo> todos;
-    private final TodoDAO dbContext;
+    private final TodoDAO todoDao;
 
     @Autowired
-    public TodoService(TodoDAO dbContext){
-        this.dbContext = dbContext;
-        dbContext.createTable();
-        todos = dbContext.selectAll();
+    public TodoService(TodoDAO todoDao) {
+        this.todoDao = todoDao;
+        todoDao.createTable();
+        todos = todoDao.selectAll();
     }
 
-    public ArrayList<Todo> getTodos(){
+    public ArrayList<Todo> getTodos() {
         return todos;
     }
 
     public void addTodo(Todo todo) {
-        Todo t = dbContext.insert(todo);
-        if(t == null) return;
+        Todo t = todoDao.insert(todo);
+        if (t == null) return;
         todos.add(t);
     }
 
-    public void updateTodo(Todo todo){
-        dbContext.update(todo);
+    public void updateTodo(Todo todo) {
+        todoDao.update(todo);
         todos.removeIf(t -> t.getId() == todo.getId());
-        todos.add(todo);
     }
 }

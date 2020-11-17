@@ -3,10 +3,10 @@ package todoapp.app.models;
 import java.util.Date;
 
 public class Todo {
-    private int id;
-    private String text;
-    private Date created;
-    private boolean done;
+    private int id; // The id of the todo
+    private String text; // The todo text
+    private Date created; // When it was created
+    private boolean done; // Marked as done or not
 
     public Todo(){}
 

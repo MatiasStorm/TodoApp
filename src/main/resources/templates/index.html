@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+                    xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>index</title>
+    <title>Todo App</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -14,28 +15,27 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
             integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
             crossorigin="anonymous"></script>
-    <script>
-
-    </script>
 </head>
 <body>
+<h3 style="text-align: center">Todo App</h3>
 <div class="container width-25 mt-3">
     <div class="row justify-content-center">
         <ul class="list-group mb-3 col-8">
             <li class="list-group-item align-middle" th:each="t : ${ todos }" th:if="!${t.done}">
-                <h3 class="d-inline" >
+                <h3 class="d-inline">
                     <b th:text="${t.text}"></b>
-                    <span class="badge badge-secondary" th:text="${#dates.format(t.created, 'HH:mm dd-MM-yyyy')}"></span>
+                    <span class="badge badge-secondary"
+                          th:text="${#dates.format(t.created, 'HH:mm dd-MM-yyyy')}"></span>
                 </h3>
-                <form th:id="'updateTodo' + ${t.id}" hidden="true" th:action="@{updateTodo}" th:object="${todo}"
-                      method="post">
-                    <input type="number" th:name="id" th:value="${t.id}" hidden="true">
-                    <input type="text" th:name="text" th:value="${t.text}" hidden="true">
-                    <input type="text" th:name="done" value="true" hidden="true">
-                </form>
-                <button type="submit" th:form="'updateTodo' + ${t.id}" class="btn btn-primary float-right m-0 ml-3">
-                    &#10003;
-                </button>
+                 <form th:id="'updateTodo' + ${t.id}" hidden="true" th:action="@{updateTodo}" th:object="${todo}"
+                       method="post">
+                     <input type="number" th:name="id" th:value="${t.id}" hidden="true">
+                     <input type="text" th:name="text" th:value="${t.text}" hidden="true">
+                     <input type="text" th:name="done" value="true" hidden="true">
+                 </form>
+                 <button type="submit" th:form="'updateTodo' + ${t.id}" class="btn btn-primary float-right m-0 ml-3">
+                     &#10003;
+                 </button>
             </li>
         </ul>
     </div>
